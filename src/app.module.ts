@@ -5,6 +5,8 @@ import { ProductsModule } from './products/products.module';
 import { UsersModule } from './users/users.module';
 import { CustomersModule } from './customers/customers.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { HttpModule, HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
 
 @Module({
   imports: [
@@ -12,6 +14,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     UsersModule,
     CustomersModule,
     ConfigModule.forRoot({ isGlobal: true }),
+    HttpModule,
   ],
   controllers: [AppController],
   providers: [
@@ -22,6 +25,17 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         return configService.get<string>('API_KEY');
       },
       inject: [ConfigService],
+    },
+    {
+      provide: 'TASKS',
+      useFactory: async (http: HttpService) => {
+        const request = http.get(
+          'https://jsonplaceholder.typicode.com/todos/1',
+        );
+        const tasks = await lastValueFrom(request);
+        return tasks.data;
+      },
+      inject: [HttpService],
     },
   ],
 })
